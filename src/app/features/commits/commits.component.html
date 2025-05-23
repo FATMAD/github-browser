@@ -1,0 +1,55 @@
+<!-- Spinner de chargement -->
+<ng-template #loadingTpl>
+  <div class="p-d-flex p-flex-column p-ai-center p-my-5">
+    <p-progressSpinner styleClass="custom-spinner" animationDuration=".5s"></p-progressSpinner>
+    <p class="p-mt-3 p-text-secondary">Chargement des commits...</p>
+  </div>
+</ng-template>
+
+<!-- Table des commits -->
+<ng-container *ngIf="(commits$ | async) as commits; else loadingTpl">
+  <p-table
+    *ngIf="commits.length > 0; else noResultsTpl"
+    [value]="commits"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[5, 10, 20]"
+    [responsiveLayout]="'scroll'"
+    [styleClass]="'p-datatable-striped p-datatable-sm'"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [style]="{ 'box-shadow': '0 2px 8px rgba(0,0,0,0.1)', 'border-radius': '6px', 'overflow': 'hidden' }"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th><i class="pi pi-user p-mr-1"></i> Auteur</th>
+        <th><i class="pi pi-align-left p-mr-1"></i> Message</th>
+        <th><i class="pi pi-link p-mr-1"></i> URL</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-commit>
+      <tr>
+        <td>{{ commit.commit.author.name }}</td>
+        <td>{{ commit.commit.message }}</td>
+        <td>
+          <a
+  [href]="commit.html_url"
+  target="_blank"
+  class="p-button p-button-sm p-button-text"
+  pTooltip="Voir le commit"
+  tooltipPosition="top"
+>
+  <i class="pi pi-external-link"></i>
+</a>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</ng-container>
+
+<!-- Aucun résultat -->
+<ng-template #noResultsTpl>
+  <div class="p-d-flex p-flex-column p-ai-center p-my-5 p-text-center p-text-secondary">
+    <i class="pi pi-info-circle" style="font-size: 1.8rem;"></i>
+    <p class="p-mt-2">Aucun commit trouvé pour ce dépôt.</p>
+  </div>
+</ng-template>

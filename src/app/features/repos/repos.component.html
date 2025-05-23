@@ -1,0 +1,71 @@
+<p-card>
+  <form [formGroup]="form" class="search-form p-fluid p-grid p-formgrid">
+    <div class="p-field p-col-12 p-md-6">
+      <label for="searchBy">Search by</label>
+      <p-dropdown 
+        inputId="searchBy" 
+        [options]="searchOptions" 
+        formControlName="searchBy" 
+        optionLabel="label" 
+        optionValue="value"
+        placeholder="Select search type">
+      </p-dropdown>
+    </div>
+
+    <div class="p-field p-col-12 p-md-6">
+      <label for="query">Query</label>
+      <input id="query" type="text" pInputText formControlName="query"
+             [placeholder]="form.get('searchBy')?.value === 'issue' ? 'Issue term' : 'Repository name'" />
+    </div>
+
+    <div *ngIf="form.get('searchBy')?.value === 'name'" class="p-field p-col-12 p-md-6">
+      <label for="language">Language</label>
+      <input id="language" type="text" pInputText formControlName="language" placeholder="Language" />
+    </div>
+
+    <div *ngIf="form.get('searchBy')?.value === 'name'" class="p-field p-col-12 p-md-6">
+      <label for="stars">Min Stars</label>
+      <p-inputNumber inputId="stars" formControlName="stars" [min]="0"></p-inputNumber>
+    </div>
+
+    <div class="p-col-12 p-text-center">
+      <button pButton type="button" label="Search" (click)="onSubmit()" [disabled]="form.invalid"></button>
+    </div>
+  </form>
+
+  <div *ngIf="loading" class="spinner-container">
+    <p-progressSpinner styleClass="custom-spinner" strokeWidth="4"></p-progressSpinner>
+  </div>
+
+  <p-table *ngIf="hasResults()" 
+           [value]="repos()" 
+           [paginator]="true" 
+           [rows]="5" 
+           [responsiveLayout]="'scroll'" 
+           class="p-mt-4">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Owner</th>
+        <th>Created At</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-repo>
+      <tr (click)="goToCommits(repo)" style="cursor: pointer;">
+        <td>{{ repo.name }}</td>
+        <td>
+          <img [src]="repo.owner.avatar_url"
+               width="30" height="30"
+               style="border-radius: 50%; vertical-align: middle; margin-right: 8px;"
+               alt="Avatar of {{ repo.owner.login }}" />
+          {{ repo.owner.login }}
+        </td>
+        <td>{{ repo.created_at | date: 'mediumDate' }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <div *ngIf="!hasResults() && submitted && !loading" class="p-mt-3 p-text-center">
+    <p-message severity="info" text="No repositories found."></p-message>
+  </div>
+</p-card>
