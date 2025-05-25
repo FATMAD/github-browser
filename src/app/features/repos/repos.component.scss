@@ -1,15 +1,98 @@
+/* Card  */
+:host ::ng-deep p-card {
+  padding: 2rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  background-color: #ffffff;
+}
+
+/* Formu */
+.search-form {
+  gap: 1.5rem;
+  background-color: #f9fafb;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+
+  .p-field {
+    margin-bottom: 1.5rem;
+
+    label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+      color: #333;
+    }
+
+    input,
+    .p-dropdown,
+    .p-inputnumber {
+      width: 100%;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+  }
+
+  button {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    background-color: #007ad9;
+    color: #fff;
+    border: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+
+  button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  button:hover:not(:disabled) {
+    background-color: #005fa3;
+  }
+}
+
+/* Spinner */
 .spinner-container {
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 2rem 0;
-  height: 80px;
 }
 
-.search-form .p-field {
-  margin-bottom: 1rem;
+/* Table*/
+:host ::ng-deep .p-table {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+
+  th {
+    background-color: #f4f6f8;
+    font-weight: 600;
+    padding: 1rem;
+    color: #333;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #eaeaea;
+  }
+
+  tr:hover {
+    background-color: #f5faff;
+  }
+
+  img {
+    border-radius: 50%;
+  }
 }
 
-.search-form button {
-  margin-top: 1rem;
+/* Message info*/
+:host ::ng-deep .p-message {
+  max-width: 400px;
+  margin: 0 auto;
 }

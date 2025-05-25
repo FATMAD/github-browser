@@ -7,26 +7,25 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import lara from'@primeng/themes/lara';
 import {providePrimeNG} from 'primeng/config'
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SharedImports } from './shared/shared-imports';
 
-import { TableModule } from 'primeng/table';
 
 
 export const appConfig: ApplicationConfig = {
   providers: [
-     provideZoneChangeDetection({ eventCoalescing: true }),
-     provideRouter(routes), provideHttpClient(),
-      importProvidersFrom(
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+    provideHttpClient(),
+    provideAnimations(),
+    importProvidersFrom(
       BrowserAnimationsModule,
-      TableModule,
-      ProgressSpinnerModule
+      SharedImports
     ),
-     providePrimeNG ({
-        theme :      
-      {
-        preset :lara
+    providePrimeNG({
+      ripple: true,
+      theme: {
+        preset: lara
       }
-     }),
-     provideAnimations()
-]
+    })
+  ]
 };

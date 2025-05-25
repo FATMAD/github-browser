@@ -1,45 +1,73 @@
-<!-- Spinner de chargement -->
+<!-- Spinner  -->
 <ng-template #loadingTpl>
   <div class="p-d-flex p-flex-column p-ai-center p-my-5">
     <p-progressSpinner styleClass="custom-spinner" animationDuration=".5s"></p-progressSpinner>
-    <p class="p-mt-3 p-text-secondary">Chargement des commits...</p>
+    <!-- <p class="p-mt-3 p-text-secondary">Chargement des commits...</p>-->
   </div>
 </ng-template>
 
-<!-- Table des commits -->
-<ng-container *ngIf="(commits$ | async) as commits; else loadingTpl">
+<!-- Table  commits -->
+<ng-container *ngIf="!loading(); else loadingTpl">
   <p-table
-    *ngIf="commits.length > 0; else noResultsTpl"
-    [value]="commits"
+    *ngIf="commits().length > 0; else noResultsTpl"
+    [value]="commits()"
     [paginator]="true"
     [rows]="10"
     [rowsPerPageOptions]="[5, 10, 20]"
     [responsiveLayout]="'scroll'"
     [styleClass]="'p-datatable-striped p-datatable-sm'"
-    [tableStyle]="{ 'min-width': '50rem' }"
+    [tableStyle]="{ 'min-width': '60rem' }"
     [style]="{ 'box-shadow': '0 2px 8px rgba(0,0,0,0.1)', 'border-radius': '6px', 'overflow': 'hidden' }"
   >
     <ng-template pTemplate="header">
       <tr>
-        <th><i class="pi pi-user p-mr-1"></i> Auteur</th>
-        <th><i class="pi pi-align-left p-mr-1"></i> Message</th>
-        <th><i class="pi pi-link p-mr-1"></i> URL</th>
+        <th pSortableColumn="commit.commit.author.name">
+          <i class="pi pi-user p-mr-1"></i> Auteur
+          <p-sortIcon field="commit.commit.author.name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="commit.commit.message">
+          <i class="pi pi-align-left p-mr-1"></i> Message
+          <p-sortIcon field="commit.commit.message"></p-sortIcon>
+        </th>
+        <th pSortableColumn="commit.commit.author.date">
+          <i class="pi pi-calendar p-mr-1"></i> Date
+          <p-sortIcon field="commit.commit.author.date"></p-sortIcon>
+        </th>
+        <th>
+          <i class="pi pi-link p-mr-1"></i> Lien
+        </th>
       </tr>
     </ng-template>
+
     <ng-template pTemplate="body" let-commit>
       <tr>
         <td>{{ commit.commit.author.name }}</td>
-        <td>{{ commit.commit.message }}</td>
+
+        <td>
+          <span
+            class="p-text-truncate"
+            [pTooltip]="commit.commit.message"
+            tooltipPosition="top"
+            style="max-width: 200px; display: inline-block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          >
+            {{ commit.commit.message }}
+          </span>
+        </td>
+
+        <td>{{ commit.commit.author.date | date: 'short' }}</td>
+
         <td>
           <a
-  [href]="commit.html_url"
-  target="_blank"
-  class="p-button p-button-sm p-button-text"
-  pTooltip="Voir le commit"
+  (click)="openCommit(commit.html_url)"
+  pTooltip="Voir sur GitHub"
   tooltipPosition="top"
+  style="cursor: pointer; color: var(--primary-color); text-decoration: none;"
+  aria-label="Voir le commit"
 >
-  <i class="pi pi-external-link"></i>
+  <i class="pi pi-external-link" style="font-size: 1.2rem;"></i>
 </a>
+
+    <!--<span class="p-ml-2">Voir</span-->
         </td>
       </tr>
     </ng-template>

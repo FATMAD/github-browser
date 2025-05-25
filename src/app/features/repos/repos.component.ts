@@ -1,62 +1,54 @@
-import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { GithubService } from '../../core/services/github.service';
 import { GithubRepository } from '../../core/models/github.models';
 import { Router } from '@angular/router';
+import { finalize, take } from 'rxjs/operators'; 
+import { SharedImports } from '../../shared/shared-imports';
 
-import { DropdownModule } from 'primeng/dropdown';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { MessageModule } from 'primeng/message';      
-import { MessagesModule } from 'primeng/messages';
-import { CardModule } from 'primeng/card';
-
-  
-
-
+/**
+ * Component that provides a search form to query GitHub repositories
+ * 
+ * Users can search either by repository name or issue title, and filter by language or number of stars
+ * The results are displayed below the form, and the user can navigate to the commits page for each repo
+ */
 @Component({
   selector: 'app-repos',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    DropdownModule,
-    InputTextModule,
-    InputNumberModule,
-    ButtonModule,
-    TableModule,
-    ProgressSpinnerModule,
-    MessageModule,        
-    MessagesModule,
-    CardModule,
-  ],
+   imports: [...SharedImports],
   templateUrl: './repos.component.html',
   styleUrls: ['./repos.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReposComponent {
-  /** Formulaire de recherche de dépôts GitHub */
+  /**
+   * Search form used to query the GitHub API
+   */
   form: FormGroup;
 
-  /** Liste des dépôts GitHub */
+  /**
+   * Search options: by repository name or by issue title
+   */
+  searchOptions = [
+    { label: 'Repository name', value: 'name' },
+    { label: 'Issue title', value: 'issue' }
+  ];
+
+  /**
+   * Signal that holds the list of GitHub repositories returned by the search
+   */
   repos = signal<GithubRepository[]>([]);
 
-  /** Indique si le formulaire a été soumis */
+  /**
+   * Signal indicating whether a search is currently in progress
+   */
+  loading = signal(false);
+
+  /**
+   * Boolean flag that becomes true once the form has been submitted at least once
+   */
+
+
   submitted = false;
-
-  /** Indique si les données sont en cours de chargement */
-  loading = false;
-
-  /** Options du champ "Search by" */
-  searchOptions = [
-    { label: 'Repository Name', value: 'name' },
-    { label: 'Issue Title', value: 'issue' }
-  ];
 
   constructor(
     private fb: FormBuilder,
@@ -67,36 +59,53 @@ export class ReposComponent {
       searchBy: ['name', Validators.required],
       query: ['', Validators.required],
       language: [''],
-      stars: ['']
+      stars: [null]
     });
   }
 
   /**
-   * Appelé lors du clic sur le bouton de recherche
-   * Déclenche l'appel au service GitHub selon les critères du formulaire
+   * Submits the search form and sends a request to the GitHub API
+   * 
+   * The search is performed based on the selected type (by name or issue)
+   * Results are stored in the `repos` signal.
    */
   onSubmit(): void {
-    if (this.form.invalid) return;
-
     this.submitted = true;
-    this.loading = true;
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.loading.set(true);
     this.repos.set([]);
 
     const { searchBy, query, language, stars } = this.form.value;
 
-    const obs = searchBy === 'issue'
+    const search$ = searchBy === 'issue'
       ? this.github.searchReposByIssueTerm(query)
-      : this.github.searchRepositories(query, language || undefined, stars ? +stars : undefined);
+      : this.github.searchRepositories(query, language || undefined, stars ?? undefined);
 
-    obs.subscribe({
-      next: repos => this.repos.set(repos),
-      complete: () => this.loading = false,
-      error: () => this.loading = false
-    });
+    search$
+      .pipe(
+        take(1),
+        finalize(() => {
+          console.log('fatmaaaaaaaa'); 
+          this.loading.set(false);
+        })
+      )
+      .subscribe({
+        next: (data) => this.repos.set(data),
+        error: (err) => {
+          console.error('Error while searching GitHub:', err);
+        }
+      });
   }
 
   /**
-   * Redirige vers les commits d’un dépôt sélectionné
+   * Navigates to the commits page of the selected repository.
+   *
+   * @param repo - The selected GitHub repository.
    */
   goToCommits(repo: GithubRepository): void {
     this.router.navigate(['/commits'], {
@@ -108,14 +117,13 @@ export class ReposComponent {
   }
 
   /**
-   * Optimise *ngFor avec une clé unique
+   * Returns true if there are search results to display
+   *
+   * @returns `true` if the repository list is not empty
    */
-  trackByRepo(index: number, repo: GithubRepository): string {
-    return repo.id.toString();
-  }
-
-  /** Vérifie s’il y a des résultats à afficher */
   hasResults(): boolean {
     return this.repos().length > 0;
   }
+
 }
+

@@ -7,39 +7,44 @@ import {
   Signal
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, tap } from 'rxjs';
 import { GithubService } from '../../core/services/github.service';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TableModule } from 'primeng/table';
+import { GithubCommit } from '../../core/models/github.models';
+import { SharedImports } from '../../shared/shared-imports'; 
+
 
 /**
- * Composant affichant la liste des commits d'un dépôt GitHub donné.
- * Il récupère les paramètres de l'URL (owner et repo) et appelle l'API via GithubService.
+ * Component that displays the list of commits for a GitHub repo
+ * 
  */
 @Component({
   selector: 'app-commits',
-  imports: [CommonModule, TableModule, ProgressSpinnerModule],
+  imports: [...SharedImports],
   templateUrl: './commits.component.html',
-  styleUrl: './commits.component.scss',
+  styleUrls: ['./commits.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CommitsComponent {
-  /** Service GitHub injecté pour récupérer les commits */
-  private github = inject(GithubService);
-  
-  /** ActivatedRoute injecté pour accéder aux paramètres de la query */
-  private route = inject(ActivatedRoute);
+ /** Injected GitHub service used to fetch commits */
+  private readonly github = inject(GithubService);
 
-  /** Indique si le chargement est en cours */
+  /** Injected route service to access query string param */
+    private readonly route = inject(ActivatedRoute);
+
+ /**
+   * Signal that indicates whether commits are currently being loaded
+   */
+
   readonly loading = signal<boolean>(true);
 
-  /**
-   * Liste des commits obtenue en fonction des paramètres de la route.
-   * La valeur est automatiquement mise à jour à chaque changement de paramètres.
+ /**
+   * Signal that holds the list of commits fetched based on
+   * query parameters (`owner` and `repo`)
+   * 
+   * Initially, it's an empty array
    */
-  readonly commits$ = toSignal(
+  readonly commits: Signal<GithubCommit[]> = toSignal(
     this.route.queryParams.pipe(
       tap(() => this.loading.set(true)),
       switchMap(params => this.github.getCommits(params['owner'], params['repo'])),
@@ -48,12 +53,22 @@ export class CommitsComponent {
     { initialValue: [] }
   );
 
+
   /**
-   * Indique s'il n'y a aucun résultat à afficher après chargement.
-   * @returns true si les commits sont chargés et la liste est vide.
+   * Computed signal that returns true when loading is done
+   * and no commits were found
    */
-  readonly noResults = computed(() => {
-    const commits = this.commits$();
-    return !this.loading() && Array.isArray(commits) && commits.length === 0;
-  });
+  readonly noResults = computed(() => !this.loading() && this.commits().length === 0);
+
+/**
+   * Opens the given commit URL in a new browser tab
+   *
+   * @param url - The URL of the commit (usually a GitHub link)
+   */
+openCommit(url: string): void {
+  if (url?.startsWith('http')) {
+    window.open(url, '_blank');
+  }
+}
+
 }
