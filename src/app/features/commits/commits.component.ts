@@ -12,6 +12,7 @@ import { switchMap, tap } from 'rxjs';
 import { GithubService } from '../../core/services/github.service';
 import { GithubCommit } from '../../core/models/github.models';
 import { SharedImports } from '../../shared/shared-imports'; 
+import { Router } from '@angular/router';
 
 
 /**
@@ -30,11 +31,20 @@ export class CommitsComponent {
   private readonly github = inject(GithubService);
 
   /** Injected route service to access query string param */
-    private readonly route = inject(ActivatedRoute);
+  private readonly route = inject(ActivatedRoute);
+
+  private readonly router = inject(Router);
+  /**
+ * Key used to store and retrieve search criteria in localStorage
+ * Helps preserve applied filters even after a page refresh or navigation back
+ */
+
+ private readonly STORAGE_KEY = 'githubSearchCriteria';
+
 
  /**
    * Signal that indicates whether commits are currently being loaded
-   */
+*/
 
   readonly loading = signal<boolean>(true);
 
@@ -70,5 +80,20 @@ openCommit(url: string): void {
     window.open(url, '_blank');
   }
 }
+  /**
+   * Navigates back to the ReposComponent using saved search criteria
+   *
+   * If no saved criteria are found, just navigates to /repos.
+   */
+  goBack(): void {
+    const savedCriteria = localStorage.getItem(this.STORAGE_KEY);
 
+    if (savedCriteria) {
+      const criteria = JSON.parse(savedCriteria);
+      this.router.navigate(['/repos'], { state: { criteria } });
+    } else {
+      this.router.navigate(['/repos']);
+    }
+  }
 }
+

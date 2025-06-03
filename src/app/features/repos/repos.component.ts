@@ -1,10 +1,12 @@
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { GithubService } from '../../core/services/github.service';
 import { GithubRepository } from '../../core/models/github.models';
 import { Router } from '@angular/router';
 import { finalize, take } from 'rxjs/operators'; 
 import { SharedImports } from '../../shared/shared-imports';
+import { ActivatedRoute } from '@angular/router';
+
 
 /**
  * Component that provides a search form to query GitHub repositories
@@ -19,7 +21,7 @@ import { SharedImports } from '../../shared/shared-imports';
   styleUrls: ['./repos.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ReposComponent {
+export class ReposComponent  implements OnInit {
   /**
    * Search form used to query the GitHub API
    */
@@ -43,6 +45,9 @@ export class ReposComponent {
    */
   loading = signal(false);
 
+ private readonly STORAGE_KEY = 'githubSearchCriteria';
+
+
   /**
    * Boolean flag that becomes true once the form has been submitted at least once
    */
@@ -53,14 +58,24 @@ export class ReposComponent {
   constructor(
     private fb: FormBuilder,
     private github: GithubService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
+   
+
     this.form = this.fb.group({
-      searchBy: ['name', Validators.required],
-      query: ['', Validators.required],
-      language: [''],
-      stars: [null]
-    });
+    searchBy: ['name', Validators.required],
+    query: ['', Validators.required],
+    language: [''],
+    stars: [null]
+  });
+}
+
+  ngOnInit(): void {
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    if (saved) {
+      this.form.patchValue(JSON.parse(saved));
+    }
   }
 
   /**
@@ -102,12 +117,38 @@ export class ReposComponent {
       });
   }
 
+
+    /**
+   * Resets the search form to its default values and clears results.
+   * 
+   * This also removes the saved search criteria from localStorage.
+   */
+  resetForm(): void {
+    this.form.reset({
+      searchBy: 'name',
+      query: '',
+      language: '',
+      stars: null
+    });
+
+    // Remove saved criteria from localStorage
+    localStorage.removeItem(this.STORAGE_KEY);
+
+    // Clear results and reset state
+    this.repos.set([]);
+    this.submitted = false;
+  }
+
+
   /**
    * Navigates to the commits page of the selected repository.
    *
    * @param repo - The selected GitHub repository.
    */
+
   goToCommits(repo: GithubRepository): void {
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.form.value));
+
     this.router.navigate(['/commits'], {
       queryParams: {
         owner: repo.owner.login,
@@ -115,6 +156,7 @@ export class ReposComponent {
       }
     });
   }
+
 
   /**
    * Returns true if there are search results to display

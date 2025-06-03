@@ -36,6 +36,11 @@
     <div class="p-col-12 p-text-center">
       <button pButton type="button" label="Search" (click)="onSubmit()" [disabled]="form.invalid"></button>
     </div>
+
+    <div class="p-col-12 p-text-center">
+      <button pButton type="button" label="Reset"  (click)="resetForm()"></button>
+
+    </div>
   </form>
 
   <div *ngIf="loading()" class="spinner-container">
